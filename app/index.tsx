@@ -122,10 +122,9 @@ HomeScreen.options = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 60,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    backgroundColor: '#fafafa',
+    alignItems: 'center',      // center horizontally
+    justifyContent: 'center',  // center vertically
+    backgroundColor: '#F1F8E8',
   },
   row: {
     flexDirection: 'row',

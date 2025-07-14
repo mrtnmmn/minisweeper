@@ -7,7 +7,12 @@ export type Tile = {
   y: number
 }
 
-export const generateBoard = (rows: number, cols: number, mineCount: number): Tile[][] => {
+export const generateBoard = (
+  rows: number,
+  cols: number,
+  mineCount: number,
+  exclude: { x: number; y: number }[] = []
+): Tile[][] => {
   const board: Tile[][] = []
   for (let y = 0; y < rows; y++) {
     const row: Tile[] = []
@@ -17,12 +22,15 @@ export const generateBoard = (rows: number, cols: number, mineCount: number): Ti
     board.push(row)
   }
 
-  // Place mines
+  const isExcluded = (x: number, y: number) =>
+    exclude.some(tile => tile.x === x && tile.y === y)
+
+  // Place mines, avoiding excluded tiles
   let minesPlaced = 0
   while (minesPlaced < mineCount) {
     const x = Math.floor(Math.random() * cols)
     const y = Math.floor(Math.random() * rows)
-    if (!board[y][x].isMine) {
+    if (!board[y][x].isMine && !isExcluded(x, y)) {
       board[y][x].isMine = true
       minesPlaced++
     }
