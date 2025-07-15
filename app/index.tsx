@@ -10,6 +10,7 @@ import { generateBoard, Tile } from '../utils/board';
 const ROWS = 8
 const COLS = 8
 const MINES = 10
+const ICON_COLOR = '#55AD9B'
 
 const createEmptyBoard = (): Tile[][] =>
   Array.from({ length: ROWS }, (_, y) =>
@@ -26,6 +27,7 @@ const createEmptyBoard = (): Tile[][] =>
 export default function HomeScreen() {
   const [board, setBoard] = useState<Tile[][]>(createEmptyBoard)
   const [firstClick, setFirstClick] = useState(true)
+  const [isBoardRevealed, setIsBoardRevealed] = useState(false)
   const [flaggedTiles, setFlaggedTiles] = useState<number>(MINES)
 
   const [elapsed, setElapsed] = useState(0)
@@ -72,6 +74,7 @@ const revealTile = (x: number, y: number) => {
 
   // Check for game over
   if (tile.isMine) {
+    handleTimerPause()
     revealAll(newBoard) // Reveal all tiles on loss
     setBoard(newBoard)
     Alert.alert('💥 Game Over', 'You hit a mine!')
@@ -127,6 +130,7 @@ const revealTile = (x: number, y: number) => {
         tile.isRevealed = true
       }
     }
+    setIsBoardRevealed(true)
   }
 
   const checkWin = (board: Tile[][]) => {
@@ -162,20 +166,21 @@ const revealTile = (x: number, y: number) => {
     setFlaggedTiles(MINES)
     setBoard(createEmptyBoard())
     setFirstClick(true)
+    setIsBoardRevealed(false)
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.secondaryTextView}>
         <Text style={styles.secondaryText}>{flaggedTiles}</Text>
-        <FontAwesome5 name="font-awesome-flag" size={20} color="#7d7d7d" style={styles.iconStyle} />
+        <FontAwesome5 name="font-awesome-flag" size={20} color={ICON_COLOR} style={styles.iconStyle} />
         <Text style={styles.secondaryText}>{MINES}</Text>
-        <FontAwesome6 name="land-mine-on" size={20} color="#7d7d7d" style={styles.iconStyle} />
+        <FontAwesome6 name="land-mine-on" size={20} color={ICON_COLOR} style={styles.iconStyle} />
         <Text style={styles.secondaryText}>
           {Math.floor(elapsed / 60000)}:{String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0')}
         </Text>
         <TouchableOpacity onPress={resetGame}>
-          <Ionicons name="reload-circle-sharp" size={24} color="#7d7d7d" />
+          <Ionicons name="reload-circle-sharp" size={24} color={ICON_COLOR} />
         </TouchableOpacity>
       </View>
       {board.map((row, y) => (
@@ -186,6 +191,7 @@ const revealTile = (x: number, y: number) => {
               tile={tile}
               onReveal={() => revealTile(x, y)}
               onFlag={() => flagTile(x, y)}
+              isBoardRevealed={isBoardRevealed}
             />
           ))}
         </View>
@@ -215,7 +221,7 @@ const styles = StyleSheet.create({
     marginBottom: 5
   },
   secondaryText: {
-    color: '#7d7d7d',
+    color: '#55AD9B',
     fontWeight: '700',
     fontSize: 20,
     marginHorizontal: 5

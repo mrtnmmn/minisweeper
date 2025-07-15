@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "minisweeper",
+    "name": "minisweeper - minimalist minesweeper",
     "slug": "minisweeper",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/icons/app-icon.png",
     "scheme": "minisweeper",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,8 +14,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#95D2B3"
       },
+      "package": "com.mrtndev.minisweeper",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true
     },
     "web": {

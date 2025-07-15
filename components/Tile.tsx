@@ -8,13 +8,14 @@ type Props = {
   tile: Tile
   onReveal: () => void
   onFlag: () => void
+  isBoardRevealed: boolean
 }
 
-export default function TileComponent({ tile, onReveal, onFlag }: Props) {
+export default function TileComponent({ tile, onReveal, onFlag, isBoardRevealed }: Props) {
   const getDisplay = () => {
-    if (tile.isFlagged) return <FontAwesome5 name="font-awesome-flag" size={20} color="#D8EFD3" />
+    if (tile.isFlagged) return <FontAwesome5 name="font-awesome-flag" size={20} color={isBoardRevealed ? "#5A827E" : "#D8EFD3"} />
     if (!tile.isRevealed) return ''
-    if (tile.isMine) return <FontAwesome6 name="land-mine-on" size={20} color="#d32f2f" />
+    if (tile.isMine) return <FontAwesome6 name="land-mine-on" size={20} color="#5A827E" />
     return tile.adjacentMines > 0 ? tile.adjacentMines.toString() : ''
   }
 
@@ -34,7 +35,7 @@ const styles = StyleSheet.create({
     margin: 2,
     width: 32,
     height: 32,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: '#55AD9B',
     backgroundColor: '#55AD9B',
     alignItems: 'center',
@@ -48,6 +49,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   one: {
-    color: '#5A827E'
+    color: '#096B68'
   }
 })
