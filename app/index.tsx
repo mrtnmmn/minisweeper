@@ -1,44 +1,108 @@
-import React, { useState } from 'react'
-import { Alert, Button, StyleSheet, View } from 'react-native'
-import TileComponent from '../components/Tile'
-import { generateBoard, Tile } from '../utils/board'
+import { Timer } from '@/utils/Timer';
+import { FontAwesome6 } from '@expo/vector-icons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import TileComponent from '../components/Tile';
+import { generateBoard, Tile } from '../utils/board';
 
 const ROWS = 8
 const COLS = 8
 const MINES = 10
 
+const createEmptyBoard = (): Tile[][] =>
+  Array.from({ length: ROWS }, (_, y) =>
+    Array.from({ length: COLS }, (_, x) => ({
+      x,
+      y,
+      isMine: false,
+      isRevealed: false,
+      isFlagged: false,
+      adjacentMines: 0,
+    }))
+  )
+
 export default function HomeScreen() {
-  const [board, setBoard] = useState(() => generateBoard(ROWS, COLS, MINES))
+  const [board, setBoard] = useState<Tile[][]>(createEmptyBoard)
+  const [firstClick, setFirstClick] = useState(true)
+  const [flaggedTiles, setFlaggedTiles] = useState<number>(MINES)
 
-  const revealTile = (x: number, y: number) => {
-    const newBoard = board.map(row => row.map(tile => ({ ...tile })))
-    const tile = newBoard[y][x]
-    if (tile.isFlagged || tile.isRevealed) return
+  const [elapsed, setElapsed] = useState(0)
+  const timerRef = useRef<Timer | null>(null)
 
-    tile.isRevealed = true
-    if (tile.isMine) {
-      Alert.alert('💥 Game Over', 'You hit a mine!')
-      revealAll(newBoard)
-      setBoard(newBoard)
-      return
-    }
+  useEffect(() => {
+    timerRef.current = new Timer(1000) // tick every second
+    return () => timerRef.current?.reset()
+  }, [])
 
-    if (tile.adjacentMines === 0) {
-      revealEmpty(newBoard, x, y)
-    }
-
-    setBoard(newBoard)
-
-    if (checkWin(newBoard)) {
-      Alert.alert('🎉 You Win!', 'You found all the mines!')
-    }
+  const handleTimerStart = () => {
+    timerRef.current?.start(setElapsed)
   }
+
+  const handleTimerPause = () => {
+    timerRef.current?.pause()
+  }
+
+  const handleTimerReset = () => {
+    timerRef.current?.reset()
+    setElapsed(0)
+  }
+
+const revealTile = (x: number, y: number) => {
+  // Use the existing board state unless it's the first click
+  let currentBoard = board
+  if (firstClick) {
+    // On the first click, generate a new board ensuring the first tile isn't a mine
+    currentBoard = generateBoard(ROWS, COLS, MINES, { x, y })
+    setFirstClick(false)
+    handleTimerReset()
+    handleTimerStart()
+  }
+
+  // Create a deep copy to mutate safely before setting state
+  const newBoard = currentBoard.map(row => row.map(tile => ({ ...tile })))
+
+  const tile = newBoard[y][x]
+
+  // Guard against revealing flagged or already revealed tiles
+  if (tile.isRevealed || tile.isFlagged) {
+    return
+  }
+
+  // Check for game over
+  if (tile.isMine) {
+    revealAll(newBoard) // Reveal all tiles on loss
+    setBoard(newBoard)
+    Alert.alert('💥 Game Over', 'You hit a mine!')
+    return
+  }
+  
+  // *** THE FIX IS HERE ***
+  // If the tile is empty (0 adjacent mines), start the flood fill.
+  // Otherwise, just reveal the single clicked tile.
+  if (tile.adjacentMines === 0) {
+    revealEmpty(newBoard, x, y)
+  } else {
+    tile.isRevealed = true
+  }
+
+  // Update the board in the UI
+  setBoard(newBoard)
+
+  // Check for a win condition
+  if (checkWin(newBoard)) {
+    Alert.alert('🎉 You Win!', 'You found all the mines!')
+  }
+}
 
   const flagTile = (x: number, y: number) => {
     const newBoard = board.map(row => row.map(tile => ({ ...tile })))
     const tile = newBoard[y][x]
     if (!tile.isRevealed) {
+      tile.isFlagged ? setFlaggedTiles(flaggedTiles + 1) : setFlaggedTiles(flaggedTiles - 1)
       tile.isFlagged = !tile.isFlagged
+      Vibration.vibrate(50) // Vibrate for 50 milliseconds
     }
     setBoard(newBoard)
   }
@@ -73,6 +137,7 @@ export default function HomeScreen() {
         }
       }
     }
+    handleTimerPause()
     return true
   }
 
@@ -93,12 +158,26 @@ export default function HomeScreen() {
   }
 
   const resetGame = () => {
-    setBoard(generateBoard(ROWS, COLS, MINES))
+    handleTimerReset()
+    setFlaggedTiles(MINES)
+    setBoard(createEmptyBoard())
+    setFirstClick(true)
   }
 
   return (
     <View style={styles.container}>
-      <Button title="New Game" onPress={resetGame} />
+      <View style={styles.secondaryTextView}>
+        <Text style={styles.secondaryText}>{flaggedTiles}</Text>
+        <FontAwesome5 name="font-awesome-flag" size={20} color="#7d7d7d" style={styles.iconStyle} />
+        <Text style={styles.secondaryText}>{MINES}</Text>
+        <FontAwesome6 name="land-mine-on" size={20} color="#7d7d7d" style={styles.iconStyle} />
+        <Text style={styles.secondaryText}>
+          {Math.floor(elapsed / 60000)}:{String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0')}
+        </Text>
+        <TouchableOpacity onPress={resetGame}>
+          <Ionicons name="reload-circle-sharp" size={24} color="#7d7d7d" />
+        </TouchableOpacity>
+      </View>
       {board.map((row, y) => (
         <View key={y} style={styles.row}>
           {row.map((tile, x) => (
@@ -122,11 +201,26 @@ HomeScreen.options = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',      // center horizontally
-    justifyContent: 'center',  // center vertically
-    backgroundColor: '#F1F8E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D8EFD3',
   },
   row: {
     flexDirection: 'row',
+  },
+  secondaryTextView: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5
+  },
+  secondaryText: {
+    color: '#7d7d7d',
+    fontWeight: '700',
+    fontSize: 20,
+    marginHorizontal: 5
+  },
+  iconStyle: {
+    marginRight: 20
   },
 })

@@ -11,7 +11,7 @@ export const generateBoard = (
   rows: number,
   cols: number,
   mineCount: number,
-  exclude: { x: number; y: number }[] = []
+  initialClick: { x: number; y: number }
 ): Tile[][] => {
   const board: Tile[][] = []
   for (let y = 0; y < rows; y++) {
@@ -22,15 +22,26 @@ export const generateBoard = (
     board.push(row)
   }
 
-  const isExcluded = (x: number, y: number) =>
-    exclude.some(tile => tile.x === x && tile.y === y)
+  // Get the initial tile and its neighbors
+  const safeZone = new Set<string>()
+  const addToSafeZone = (x: number, y: number) => {
+    if (x >= 0 && y >= 0 && x < cols && y < rows) {
+      safeZone.add(`${x},${y}`)
+    }
+  }
 
-  // Place mines, avoiding excluded tiles
+  addToSafeZone(initialClick.x, initialClick.y)
+  getNeighbors(board, initialClick.x, initialClick.y).forEach(tile =>
+    addToSafeZone(tile.x, tile.y)
+  )
+
+  // Place mines excluding the safe zone
   let minesPlaced = 0
   while (minesPlaced < mineCount) {
     const x = Math.floor(Math.random() * cols)
     const y = Math.floor(Math.random() * rows)
-    if (!board[y][x].isMine && !isExcluded(x, y)) {
+    const key = `${x},${y}`
+    if (!board[y][x].isMine && !safeZone.has(key)) {
       board[y][x].isMine = true
       minesPlaced++
     }

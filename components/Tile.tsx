@@ -12,7 +12,7 @@ type Props = {
 
 export default function TileComponent({ tile, onReveal, onFlag }: Props) {
   const getDisplay = () => {
-    if (tile.isFlagged) return <FontAwesome5 name="font-awesome-flag" size={20} color="#d32f2f" />
+    if (tile.isFlagged) return <FontAwesome5 name="font-awesome-flag" size={20} color="#D8EFD3" />
     if (!tile.isRevealed) return ''
     if (tile.isMine) return <FontAwesome6 name="land-mine-on" size={20} color="#d32f2f" />
     return tile.adjacentMines > 0 ? tile.adjacentMines.toString() : ''
@@ -24,7 +24,7 @@ export default function TileComponent({ tile, onReveal, onFlag }: Props) {
       onLongPress={onFlag}
       style={[styles.tile, tile.isRevealed && styles.revealed]}
     >
-      <Text style={styles.text}>{getDisplay()}</Text>
+      <Text style={[styles.text, styles.one]}>{getDisplay()}</Text>
     </Pressable>
   )
 }
@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderWidth: 1,
-    borderColor: '#999',
-    backgroundColor: '#ccc',
+    borderColor: '#55AD9B',
+    backgroundColor: '#55AD9B',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5
@@ -47,4 +47,7 @@ const styles = StyleSheet.create({
   text: {
     fontWeight: 'bold',
   },
+  one: {
+    color: '#5A827E'
+  }
 })
